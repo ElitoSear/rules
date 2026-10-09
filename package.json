@@ -1,6 +1,6 @@
 {
   "name": "@elitosear/eslint-rules",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Opinionated ESLint rules for React, TypeScript, Zod, TanStack Query and i18n codebases.",
   "keywords": [
     "eslint",
