@@ -1,0 +1,65 @@
+{
+  "name": "@elitosear/eslint-rules",
+  "version": "0.1.0",
+  "description": "Opinionated ESLint rules for React, TypeScript, Zod, TanStack Query and i18n codebases.",
+  "keywords": [
+    "eslint",
+    "eslintplugin",
+    "eslint-plugin",
+    "eslint-rules",
+    "react",
+    "typescript",
+    "zod",
+    "tanstack-query",
+    "i18n",
+    "flat-config"
+  ],
+  "license": "MIT",
+  "author": "ElitoSear <elitogamer100@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ElitoSear/rules.git"
+  },
+  "bugs": "https://github.com/ElitoSear/rules/issues",
+  "homepage": "https://github.com/ElitoSear/rules#readme",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/plugin.d.ts",
+      "default": "./dist/plugin.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsc",
+    "type-check": "tsc -p tsconfig.check.json",
+    "test": "node --test \"test/**/*.test.ts\"",
+    "prepack": "tsc"
+  },
+  "dependencies": {
+    "@typescript-eslint/utils": "^8.71.1",
+    "pluralize": "^8.0.0"
+  },
+  "peerDependencies": {
+    "eslint": ">=9"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "@types/pluralize": "^0.0.33",
+    "@typescript-eslint/parser": "^8.71.1",
+    "@typescript-eslint/rule-tester": "^8.71.1",
+    "eslint": "^9.39.0",
+    "typescript": "^6.0.3"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
