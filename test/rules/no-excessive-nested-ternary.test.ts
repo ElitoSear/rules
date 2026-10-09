@@ -8,6 +8,7 @@ ruleTester.run("no-excessive-nested-ternary", rule, {
     // A ternary inside a callback is its own scope of logic
     "const value = condition ? items.map((item) => item.active ? 1 : 0) : [];",
     "const value = condition ? (first as number) : second;",
+    { code: "const value = first ? second ? third : fourth : fifth;", options: [{ maxDepth: 2 }] },
   ],
   invalid: [
     {
@@ -38,6 +39,11 @@ ruleTester.run("no-excessive-nested-ternary", rule, {
     {
       code: "const element = <div>{first ? <span /> : second ? <b /> : null}</div>;",
       errors: [{ messageId: "excessiveNesting", data: { maximum: 1, depth: 2 } }],
+    },
+    {
+      code: "const value = first ? second ? third ? fourth : fifth : sixth : seventh;",
+      options: [{ maxDepth: 2 }],
+      errors: [{ messageId: "excessiveNesting", data: { maximum: 2, depth: 3 } }],
     },
   ],
 });

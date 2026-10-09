@@ -1,7 +1,10 @@
 import { AST_NODE_TYPES, type TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "../create-rule.ts";
 
-const MAXIMUM_DEPTH = 1;
+/** Default depth: a single ternary, no nesting. */
+const DEFAULT_MAXIMUM_DEPTH = 1;
+
+type Options = [{ maxDepth?: number }];
 
 /** Skips TypeScript wrappers that do not break a ternary chain: `as`, `!`, `satisfies`, `<T>`. */
 function unwrapExpression(node: TSESTree.Node): TSESTree.Node {
@@ -45,30 +48,43 @@ function isNestedTernary(node: TSESTree.ConditionalExpression): boolean {
   );
 }
 
-export default createRule({
+export default createRule<Options, "excessiveNesting">({
   name: "no-excessive-nested-ternary",
   meta: {
     type: "problem",
     docs: {
-      description: "Limit nested ternary operators to 1 level.",
+      description: "Limit the nesting depth of ternary operators.",
     },
-    schema: [],
+    schema: [
+      {
+        type: "object",
+        properties: {
+          maxDepth: {
+            type: "integer",
+            minimum: 1,
+            description: "Maximum ternary chain depth; 1 = no nesting.",
+          },
+        },
+        additionalProperties: false,
+      },
+    ],
     messages: {
       excessiveNesting:
-        "Nested ternaries are limited to {{maximum}} level; found {{depth}}. Use if/else, a lookup map or a switch.",
+        "Ternary nesting depth is limited to {{maximum}}; found {{depth}}. Use if/else, a lookup map or a switch.",
     },
   },
-  defaultOptions: [],
-  create(context) {
+  defaultOptions: [{ maxDepth: DEFAULT_MAXIMUM_DEPTH }],
+  create(context, [options]) {
+    const maximumDepth = options.maxDepth ?? DEFAULT_MAXIMUM_DEPTH;
     return {
       ConditionalExpression(node) {
         if (isNestedTernary(node)) return;
         const depth = getTernaryDepth(node);
-        if (depth <= MAXIMUM_DEPTH) return;
+        if (depth <= maximumDepth) return;
         context.report({
           node,
           messageId: "excessiveNesting",
-          data: { maximum: MAXIMUM_DEPTH, depth },
+          data: { maximum: maximumDepth, depth },
         });
       },
     };

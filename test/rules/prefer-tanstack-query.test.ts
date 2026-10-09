@@ -11,6 +11,10 @@ ruleTester.run("prefer-tanstack-query", rule, {
     "useQuery({ queryKey: ['a'], queryFn: async () => fetch('/a') });",
     "const load = async () => fetch('/a');",
     "import { useEffect as other } from 'x'; other(async () => { await fetch('/a'); });",
+    {
+      code: "useEffect(() => { axios.request('/a').then(setData); }, []);",
+      options: [{ requestClients: ["http"] }],
+    },
   ],
   invalid: [
     {
@@ -30,6 +34,21 @@ ruleTester.run("prefer-tanstack-query", rule, {
     },
     {
       code: "useEffect(() => { useEffect(() => {}); fetch('/a').then(setA); }, []);",
+      errors: error,
+    },
+    {
+      code: "useEffect(() => { http.request('/a').then(setData); }, []);",
+      options: [{ requestClients: ["http"] }],
+      errors: error,
+    },
+    {
+      code: "useEffect(() => { api.query('/a').then(setData); }, []);",
+      options: [{ requestMethods: ["query"] }],
+      errors: error,
+    },
+    {
+      code: "useEffect(() => { request('/a').then(setData); }, []);",
+      options: [{ requestFunctions: ["request"] }],
       errors: error,
     },
   ],

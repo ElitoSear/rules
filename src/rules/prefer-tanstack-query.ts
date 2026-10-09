@@ -4,11 +4,15 @@ import { createRule } from "../create-rule.ts";
 
 const HOOK_NAME = "useEffect";
 /** Calls by bare name that perform a request. */
-const REQUEST_FUNCTIONS = new Set(["fetch", "axios", "ky"]);
+const REQUEST_FUNCTIONS = ["fetch", "axios", "ky"];
 /** Objects whose method calls perform a request. */
-const REQUEST_CLIENTS = new Set(["axios", "supabase", "ky"]);
+const REQUEST_CLIENTS = ["axios", "supabase", "ky"];
 /** HTTP-verb and query-builder methods. */
-const REQUEST_METHODS = new Set(["get", "post", "put", "patch", "delete", "from", "rpc"]);
+const REQUEST_METHODS = ["get", "post", "put", "patch", "delete", "from", "rpc"];
+
+type Options = [{ requestFunctions?: string[]; requestClients?: string[]; requestMethods?: string[] }];
+
+type RequestMatchers = { functions: Set<string>; clients: Set<string>; methods: Set<string> };
 
 function memberPropertyName(node: TSESTree.MemberExpression): string | undefined {
   if (!node.computed)
@@ -29,14 +33,18 @@ function isEffectCall(options: {
 }
 
 /** `fetch()`, `axios()`, `axios.get()`, `supabase.from()`, `client.post()`. */
-function isRequestCall(node: TSESTree.CallExpression): boolean {
+function isRequestCall(options: {
+  node: TSESTree.CallExpression;
+  matchers: RequestMatchers;
+}): boolean {
+  const { node, matchers } = options;
   const callee = node.callee;
-  if (callee.type === AST_NODE_TYPES.Identifier) return REQUEST_FUNCTIONS.has(callee.name);
+  if (callee.type === AST_NODE_TYPES.Identifier) return matchers.functions.has(callee.name);
   if (callee.type !== AST_NODE_TYPES.MemberExpression) return false;
-  if (callee.object.type === AST_NODE_TYPES.Identifier && REQUEST_CLIENTS.has(callee.object.name))
+  if (callee.object.type === AST_NODE_TYPES.Identifier && matchers.clients.has(callee.object.name))
     return true;
   const property = memberPropertyName(callee);
-  return property !== undefined && REQUEST_METHODS.has(property);
+  return property !== undefined && matchers.methods.has(property);
 }
 
 function isThenCall(node: TSESTree.CallExpression): boolean {
@@ -45,21 +53,46 @@ function isThenCall(node: TSESTree.CallExpression): boolean {
 
 type EffectFrame = { node: TSESTree.CallExpression; isAsync: boolean; requests: boolean };
 
-export default createRule({
+function stringListSchema(description: string) {
+  return { type: "array" as const, items: { type: "string" as const }, uniqueItems: true, description };
+}
+
+export default createRule<Options, "preferTanstackQuery">({
   name: "prefer-tanstack-query",
   meta: {
     type: "suggestion",
     docs: {
       description: "Prefer TanStack Query over useEffect for data fetching.",
     },
-    schema: [],
+    schema: [
+      {
+        type: "object",
+        properties: {
+          requestFunctions: stringListSchema("Bare call names that make a request; replaces default list."),
+          requestClients: stringListSchema("Objects whose method calls make a request; replaces default list."),
+          requestMethods: stringListSchema("Method names that make a request on any object; replaces default list."),
+        },
+        additionalProperties: false,
+      },
+    ],
     messages: {
       preferTanstackQuery:
         "Prefer TanStack Query (useQuery/useMutation) over useEffect for data fetching.",
     },
   },
-  defaultOptions: [],
-  create(context) {
+  defaultOptions: [
+    {
+      requestFunctions: REQUEST_FUNCTIONS,
+      requestClients: REQUEST_CLIENTS,
+      requestMethods: REQUEST_METHODS,
+    },
+  ],
+  create(context, [options]) {
+    const matchers: RequestMatchers = {
+      functions: new Set(options.requestFunctions ?? REQUEST_FUNCTIONS),
+      clients: new Set(options.requestClients ?? REQUEST_CLIENTS),
+      methods: new Set(options.requestMethods ?? REQUEST_METHODS),
+    };
     const hookNames = collectReactImportNames({ program: context.sourceCode.ast, importedName: HOOK_NAME });
     // Innermost useEffect being traversed; asynchrony and requests anywhere inside count towards it.
     const frames: EffectFrame[] = [];
@@ -79,7 +112,7 @@ export default createRule({
         const frame = current();
         if (!frame) return;
         if (isThenCall(node)) frame.isAsync = true;
-        if (isRequestCall(node)) frame.requests = true;
+        if (isRequestCall({ node, matchers })) frame.requests = true;
       },
       "CallExpression:exit"(node: TSESTree.CallExpression) {
         const frame = current();

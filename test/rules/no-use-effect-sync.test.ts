@@ -10,6 +10,12 @@ ruleTester.run("no-use-effect-sync", rule, {
     "useMemo(() => compute(items), [items]);",
     "import { useEffect as runEffect } from 'other'; runEffect();",
     "React[hookName](() => {});",
+    { code: "useEffect(() => {}, []);", options: [{ allowEmptyDependencies: true }] },
+    { code: "React.useEffect(() => {}, []);", options: [{ allowEmptyDependencies: true }] },
+    {
+      code: "import { useEffect as runEffect } from 'react'; runEffect(() => {}, []);",
+      options: [{ allowEmptyDependencies: true }],
+    },
   ],
   invalid: [
     { code: "useEffect(() => { setName(first); }, [first]);", errors: error },
@@ -21,5 +27,9 @@ ruleTester.run("no-use-effect-sync", rule, {
       code: "import { useEffect as runEffect } from 'react'; runEffect(() => {}, []);",
       errors: error,
     },
+    { code: "useEffect(() => {}, [first]);", options: [{ allowEmptyDependencies: true }], errors: error },
+    { code: "useEffect(() => {});", options: [{ allowEmptyDependencies: true }], errors: error },
+    { code: "React.useEffect(() => {}, dependencies);", options: [{ allowEmptyDependencies: true }], errors: error },
+    { code: "useEffect(() => {}, []);", options: [{ allowEmptyDependencies: false }], errors: error },
   ],
 });

@@ -113,6 +113,14 @@ users.map((user) => user.id); // good
 
 Reports a ternary nested inside another ternary, including through `as`, `!` and `satisfies`. Prefer early returns, a lookup table or a function.
 
+| Option | Default | Meaning |
+| --- | --- | --- |
+| `maxDepth` | `1` | Maximum depth of a ternary chain; `1` means a single ternary with no nesting. |
+
+```js
+"elitosear/no-excessive-nested-ternary": ["error", { maxDepth: 2 }]
+```
+
 ### no-export-reexport
 
 Reports re-exporting an imported symbol, including `export * from`, `export { x } from` and `import { x } …; export { x }`. Export what the file defines and import from the defining module.
@@ -120,6 +128,14 @@ Reports re-exporting an imported symbol, including `export * from`, `export { x 
 ### no-iife
 
 Reports `(function () {})()`, `(() => {})()`, `.call`/`.apply` forms and TypeScript-wrapped variants.
+
+| Option | Default | Meaning |
+| --- | --- | --- |
+| `allowAsync` | `false` | Allow immediately invoked async functions and arrows; synchronous IIFEs are still reported. |
+
+```js
+"elitosear/no-iife": ["error", { allowAsync: true }]
+```
 
 ### no-index-files
 
@@ -138,6 +154,14 @@ Reports native elements that have a design-system equivalent (`button`, `input`,
 ### no-use-effect-sync
 
 Reports `useEffect` (also aliased, `React.useEffect` and `React["useEffect"]`). Derive values during render, use `useMemo`, a `key` reset, TanStack Query or `useSyncExternalStore`. For the rare real case, disable the line with a description.
+
+| Option | Default | Meaning |
+| --- | --- | --- |
+| `allowEmptyDependencies` | `false` | Allow `useEffect(callback, [])` with a literal empty array; other dependency arrays and missing ones are still reported. |
+
+```js
+"elitosear/no-use-effect-sync": ["error", { allowEmptyDependencies: true }]
+```
 
 ### no-zod-any
 
@@ -159,6 +183,18 @@ Reports `useState` that holds the value of an input (`value`, `checked`, `select
 ### prefer-tanstack-query
 
 Reports an asynchronous `useEffect` that makes a request (`fetch`, `axios`, `ky`, `supabase`, or `.get/.post/.put/.patch/.delete/.from/.rpc`).
+
+Each option replaces its default list. To extend a default, list the full set.
+
+| Option | Default | Meaning |
+| --- | --- | --- |
+| `requestFunctions` | `["fetch", "axios", "ky"]` | Names called directly that make a request. |
+| `requestClients` | `["axios", "supabase", "ky"]` | Objects whose method calls make a request. |
+| `requestMethods` | `["get", "post", "put", "patch", "delete", "from", "rpc"]` | Method names that make a request on any object. |
+
+```js
+"elitosear/prefer-tanstack-query": ["warn", { requestClients: ["axios", "supabase", "ky", "http"] }]
+```
 
 ### rename-unused-underscore
 
